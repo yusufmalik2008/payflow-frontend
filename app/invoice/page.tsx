@@ -58,48 +58,47 @@ export default function DashboardPage() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+const createOrder = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  if (!productName || !price) return;
 
-  const createOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!productName || !price) return;
+  setLoading(true);
 
-    setLoading(true);
+  // Simulasi delay API
+  await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Simulasi delay API
-    await new Promise(res => setTimeout(res, 800));
+  const priceNum = parseFloat(price);
+  const total = priceNum * quantity;
 
-    const total = parseFloat(price) * quantity;
-    const newOrder = {
-      id: `ord_${Date.now()}`,
-      userId,
-      totalAmount: total,
-      status: Math.random() > 0.3 ? 'pending' : 'paid', // 70% pending
-      createdAt: new Date(),
-      items: [{ name: productName, quantity, price: parseFloat(price) }]
-    };
-
-    setOrders(prev => [newOrder, ...prev]);
-    
-    // Kadang bikin payment juga kalau statusnya paid
-    if (newOrder.status === 'paid') {
-      setTimeout(() => {
-        setPayments(prev => [{
-          id: `pay_${Date.now()}`,
-          orderId: newOrder.id,
-          amount: total,
-          status: 'completed',
-          createdAt: new Date(),
-        }, ...prev]);
-      }, 1200);
-    }
-
-    // Reset form
-    setProductName('');
-    setPrice('');
-    setQuantity(1);
-    setLoading(false);
+  const newOrder = {
+    id: `ord_${Date.now()}`,
+    userId,
+    totalAmount: total,
+    status: Math.random() > 0.3 ? 'pending' as const : 'paid' as const,
+    createdAt: new Date(),
+    items: [{ name: productName, quantity, price: priceNum }]
   };
 
+  setOrders(prev => [newOrder, ...prev]);
+
+  if (newOrder.status === 'paid') {
+    setTimeout(() => {
+      setPayments(prev => [{
+        id: `pay_${Date.now()}`,
+        orderId: newOrder.id,
+        amount: total,
+        status: 'completed' as const,
+        createdAt: new Date(),
+      }, ...prev]);
+    }, 1200);
+  }
+
+  // Reset form
+  setProductName('');
+  setPrice('');
+  setQuantity(1);
+  setLoading(false);
+};
   const stats = {
     totalOrders: orders.length,
     paidOrders: orders.filter(o => o.status === 'paid').length,
